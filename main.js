@@ -34,14 +34,18 @@ async function Init() {
 
 	const device = await adapter.requestDevice();
 	const context = canvas.getContext("webgpu");
-	context.canvas.width = window.innerWidth;
-	context.canvas.height = window.innerHeight;
-	window.onresize = () => {
-		context.canvas.width = window.innerWidth;
-		context.canvas.height = window.innerHeight;
-	}
 
-	const format = navigator.gpu.getPreferredCanvasFormat();
+	function resizeCanvas() {
+		const size = Math.min(window.innerWidth, window.innerHeight);
+		context.canvas.width = size;
+		context.canvas.height = size;
+		canvas.width = size;
+		canvas.height = size;
+	}
+	resizeCanvas();
+	window.onresize = resizeCanvas;
+
+	const format = 'bgra8unorm';
 
 	context.configure({
 		device,
@@ -49,11 +53,12 @@ async function Init() {
 		alphaMode: "opaque"
 	});
 
-	const particleCount = 2000;
+	const particleCount = 20000;
 	const particleStride = 4 * 4; // four floats per particle
 	const particleData = new Float32Array(particleCount * 4);
 
-	for (let i = 0; i < particleCount; ++i) {
+	// first one is implicitly set to zero
+	for (let i = 1; i < particleCount; ++i) {
 		const baseIndex = i * 4;
 
 		// position
@@ -62,8 +67,8 @@ async function Init() {
 
 		// velocity
 		const angle = rng.nextFloat(0.0, Math.PI * 2);
-		particleData[baseIndex + 2] = Math.cos(angle) / 512;
-		particleData[baseIndex + 3] = Math.sin(angle) / 512;
+		particleData[baseIndex + 2] = Math.cos(angle) / 1024;
+		particleData[baseIndex + 3] = Math.sin(angle) / 1024;
 	}
 
 	const particleBuffer = device.createBuffer({
